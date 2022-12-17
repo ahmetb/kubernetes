@@ -568,14 +568,17 @@ func NewMainKubelet(kubeCfg *kubeletconfiginternal.KubeletConfiguration,
 	if klet.kubeClient != nil {
 		switch kubeCfg.ConfigMapAndSecretChangeDetectionStrategy {
 		case kubeletconfiginternal.WatchChangeDetectionStrategy:
+			klog.V(3).Info("ahmet: kubelet: choosing watching secret mgr")
 			secretManager = secret.NewWatchingSecretManager(klet.kubeClient, klet.resyncInterval)
 			configMapManager = configmap.NewWatchingConfigMapManager(klet.kubeClient, klet.resyncInterval)
 		case kubeletconfiginternal.TTLCacheChangeDetectionStrategy:
+			klog.V(3).Info("ahmet:kubelet: choosing caching secret mgr")
 			secretManager = secret.NewCachingSecretManager(
 				klet.kubeClient, manager.GetObjectTTLFromNodeFunc(klet.GetNode))
 			configMapManager = configmap.NewCachingConfigMapManager(
 				klet.kubeClient, manager.GetObjectTTLFromNodeFunc(klet.GetNode))
 		case kubeletconfiginternal.GetChangeDetectionStrategy:
+			klog.V(3).Info("ahmet: kubelet: choosing simple secret mgr")
 			secretManager = secret.NewSimpleSecretManager(klet.kubeClient)
 			configMapManager = configmap.NewSimpleConfigMapManager(klet.kubeClient)
 		default:

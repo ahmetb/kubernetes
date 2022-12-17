@@ -22,8 +22,9 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/storage"
+	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/kubelet/util"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -217,6 +218,7 @@ type cacheBasedManager struct {
 }
 
 func (c *cacheBasedManager) GetObject(namespace, name string) (runtime.Object, error) {
+	klog.V(3).Infof("ahmet: ttl-based cache get: %s/%s", namespace, name)
 	return c.objectStore.Get(namespace, name)
 }
 

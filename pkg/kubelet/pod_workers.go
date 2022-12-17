@@ -947,6 +947,7 @@ func (p *podWorkers) managePodLoop(podUpdates <-chan podWork) {
 				err = p.syncTerminatingPodFn(ctx, pod, status, update.Options.RunningPod, gracePeriod, podStatusFn)
 
 			default:
+				klog.V(3).Infof("syncing pod %s (last sync: %v ago)", pod.Name, time.Since(lastSyncTime).Truncate(time.Second))
 				isTerminal, err = p.syncPodFn(ctx, update.Options.UpdateType, pod, update.Options.MirrorPod, status)
 			}
 
@@ -1172,6 +1173,7 @@ func (p *podWorkers) completeWork(pod *v1.Pod, phaseTransition bool, syncErr err
 		p.workQueue.Enqueue(pod.UID, 0)
 	case syncErr == nil:
 		// No error; requeue at the regular resync interval.
+		klog.V(3).Infof("ahmet: enqueue pod %q again (interval:%v)", pod.Name, p.resyncInterval)
 		p.workQueue.Enqueue(pod.UID, wait.Jitter(p.resyncInterval, workerResyncIntervalJitterFactor))
 	case strings.Contains(syncErr.Error(), NetworkNotReadyErrorMsg):
 		// Network is not ready; back off for short period of time and retry as network might be ready soon.

@@ -23,6 +23,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/klog/v2"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
 	corev1 "k8s.io/kubernetes/pkg/apis/core/v1"
 	"k8s.io/kubernetes/pkg/kubelet/util/manager"
@@ -63,6 +64,7 @@ func NewSimpleSecretManager(kubeClient clientset.Interface) Manager {
 }
 
 func (s *simpleSecretManager) GetSecret(namespace, name string) (*v1.Secret, error) {
+	klog.V(3).Info("ahmet: simpleSecretManager.GetSecret")
 	return s.kubeClient.CoreV1().Secrets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
@@ -81,6 +83,7 @@ type secretManager struct {
 }
 
 func (s *secretManager) GetSecret(namespace, name string) (*v1.Secret, error) {
+	klog.V(3).Info("ahmet: secretManager.GetSecret")
 	object, err := s.manager.GetObject(namespace, name)
 	if err != nil {
 		return nil, err
@@ -121,7 +124,9 @@ const (
 //     not there, invalidated or too old, we fetch it from apiserver and refresh the
 //     value in cache; otherwise it is just fetched from cache
 func NewCachingSecretManager(kubeClient clientset.Interface, getTTL manager.GetObjectTTLFunc) Manager {
+	klog.V(3).Info("ahmet: initializing caching secret mgr")
 	getSecret := func(namespace, name string, opts metav1.GetOptions) (runtime.Object, error) {
+		klog.V(3).Info("ahmet: caching secretmgr client.Secrets.Get()")
 		return kubeClient.CoreV1().Secrets(namespace).Get(context.TODO(), name, opts)
 	}
 	secretStore := manager.NewObjectStore(getSecret, clock.RealClock{}, getTTL, defaultTTL)
@@ -137,10 +142,13 @@ func NewCachingSecretManager(kubeClient clientset.Interface, getTTL manager.GetO
 //     referenced objects that aren't referenced from other registered pods
 //   - every GetObject() returns a value from local cache propagated via watches
 func NewWatchingSecretManager(kubeClient clientset.Interface, resyncInterval time.Duration) Manager {
+	klog.V(3).Info("ahmet: initializing watch-based secret mgr")
 	listSecret := func(namespace string, opts metav1.ListOptions) (runtime.Object, error) {
+		klog.V(3).Info("ahmet: watchingsecretmgr client.Secrets.List()")
 		return kubeClient.CoreV1().Secrets(namespace).List(context.TODO(), opts)
 	}
 	watchSecret := func(namespace string, opts metav1.ListOptions) (watch.Interface, error) {
+		klog.V(3).Info("ahmet: watchingsecretmgr client.Secrets.Watch()")
 		return kubeClient.CoreV1().Secrets(namespace).Watch(context.TODO(), opts)
 	}
 	newSecret := func() runtime.Object {

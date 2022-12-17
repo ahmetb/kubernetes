@@ -21,7 +21,7 @@ import (
 	"sync"
 	"time"
 
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/cache"
 
 	"k8s.io/klog/v2"
@@ -294,6 +294,7 @@ func (c *objectCache) isStopped() bool {
 }
 
 func (c *objectCache) Get(namespace, name string) (runtime.Object, error) {
+	klog.V(3).Infof("ahmet: watch based cache get: %s/%s", namespace, name)
 	key := objectKey{namespace: namespace, name: name}
 
 	c.lock.RLock()
@@ -389,5 +390,6 @@ func NewWatchBasedManager(
 
 	// TODO propagate stopCh from the higher level.
 	objectStore := NewObjectCache(listObject, watchObject, newObject, isImmutable, groupResource, clock.RealClock{}, maxIdleTime, wait.NeverStop)
+	klog.V(3).Info("returning cache-based manager. objectstore: %T", objectStore)
 	return NewCacheBasedManager(objectStore, getReferencedObjects)
 }
